@@ -1,0 +1,97 @@
+<html>
+<head>
+<title>attendence.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832;}
+.s1 { color: #a9b7c6;}
+.s2 { color: #6a8759;}
+.s3 { color: #808080;}
+.s4 { color: #6897bb;}
+</style>
+</head>
+<body bgcolor="#2b2b2b">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+attendence.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">cv2</span>
+<span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+<span class="s0">import </span><span class="s1">face_recognition</span>
+<span class="s0">import </span><span class="s1">os</span>
+<span class="s0">from </span><span class="s1">datetime </span><span class="s0">import </span><span class="s1">datetime</span>
+
+
+<span class="s1">path =</span><span class="s2">'imageattendence'</span>
+<span class="s1">images = []</span>
+<span class="s1">classnames = []</span>
+<span class="s1">mylist = os.listdir(path)</span>
+<span class="s3">#print(mylist)</span>
+
+<span class="s0">for </span><span class="s1">cl </span><span class="s0">in </span><span class="s1">mylist:</span>
+    <span class="s1">curimg= cv2.imread(</span><span class="s2">f'</span><span class="s0">{</span><span class="s1">path</span><span class="s0">}</span><span class="s2">/</span><span class="s0">{</span><span class="s1">cl</span><span class="s0">}</span><span class="s2">'</span><span class="s1">)</span>
+    <span class="s1">images.append(curimg)</span>
+    <span class="s1">classnames.append(os.path.splitext(cl)[</span><span class="s4">0</span><span class="s1">])</span>
+<span class="s1">print(classnames)</span>
+
+<span class="s0">def </span><span class="s1">findencodings(images):</span>
+    <span class="s1">encodelist = []</span>
+    <span class="s0">for </span><span class="s1">img </span><span class="s0">in </span><span class="s1">images:</span>
+        <span class="s1">img = cv2.cvtColor(img</span><span class="s0">, </span><span class="s1">cv2.COLOR_BGR2RGB)</span>
+        <span class="s1">encode = face_recognition.face_encodings(img)[</span><span class="s4">0</span><span class="s1">]</span>
+        <span class="s1">encodelist.append(encode)</span>
+    <span class="s0">return </span><span class="s1">encodelist</span>
+
+<span class="s0">def </span><span class="s1">markattendence(name):</span>
+    <span class="s0">with </span><span class="s1">open(</span><span class="s2">&quot;attendence.csv&quot;</span><span class="s0">,</span><span class="s2">'r+'</span><span class="s1">)</span><span class="s0">as </span><span class="s1">f:</span>
+        <span class="s1">mydatalist = f.readlines()</span>
+        <span class="s1">namelist = []</span>
+        <span class="s0">for </span><span class="s1">line </span><span class="s0">in </span><span class="s1">mydatalist:</span>
+            <span class="s1">entry = line.split(</span><span class="s2">','</span><span class="s1">)</span>
+            <span class="s1">namelist.append(entry[</span><span class="s4">0</span><span class="s1">])</span>
+        <span class="s0">if </span><span class="s1">name </span><span class="s0">not in </span><span class="s1">namelist:</span>
+            <span class="s1">now = datetime.now()</span>
+            <span class="s1">dtstring = now.strftime(</span><span class="s2">'%H:%M:%S'</span><span class="s1">)</span>
+            <span class="s1">f.writelines(</span><span class="s2">f'</span><span class="s0">\n{</span><span class="s1">name</span><span class="s0">}</span><span class="s2">,</span><span class="s0">{</span><span class="s1">dtstring</span><span class="s0">}</span><span class="s2">'</span><span class="s1">)</span>
+
+<span class="s1">encodelistknown = findencodings(images)</span>
+<span class="s1">print(</span><span class="s2">'encodeing completes'</span><span class="s1">)</span>
+
+<span class="s1">cap = cv2.VideoCapture(</span><span class="s4">0</span><span class="s0">,</span><span class="s1">cv2.CAP_DSHOW)</span>
+<span class="s0">while True</span><span class="s1">:</span>
+    <span class="s1">success</span><span class="s0">, </span><span class="s1">img = cap.read()</span>
+
+    <span class="s1">imgs = cv2.resize(img</span><span class="s0">, </span><span class="s1">(</span><span class="s4">0</span><span class="s0">, </span><span class="s4">0</span><span class="s1">)</span><span class="s0">, None, </span><span class="s4">1</span><span class="s0">, </span><span class="s4">1</span><span class="s1">)</span>
+    <span class="s1">imgs = cv2.cvtColor(imgs</span><span class="s0">, </span><span class="s1">cv2.COLOR_BGR2RGB)</span>
+    <span class="s1">facescurframe  = face_recognition.face_locations(imgs  )</span>
+
+    <span class="s1">encodescurframe = face_recognition.face_encodings(imgs</span><span class="s0">,</span><span class="s1">facescurframe)</span>
+
+    <span class="s0">for </span><span class="s1">encodeface</span><span class="s0">,</span><span class="s1">faceloc </span><span class="s0">in </span><span class="s1">zip(encodescurframe</span><span class="s0">, </span><span class="s1">facescurframe):</span>
+        <span class="s1">matches = face_recognition.compare_faces(encodelistknown</span><span class="s0">, </span><span class="s1">encodeface)</span>
+        <span class="s1">facedis = face_recognition.face_distance(encodelistknown</span><span class="s0">, </span><span class="s1">encodeface)</span>
+        <span class="s3">#print(facedis)</span>
+        <span class="s1">matchindex = np.argmin(facedis)</span>
+
+        <span class="s0">if </span><span class="s1">matches[matchindex]:</span>
+            <span class="s1">name = classnames[matchindex].upper()</span>
+            <span class="s3">#print(name)</span>
+            <span class="s1">y1</span><span class="s0">,</span><span class="s1">x2</span><span class="s0">,</span><span class="s1">y2</span><span class="s0">,</span><span class="s1">x1 = faceloc</span>
+            <span class="s3">#y1, x2, y2, x1 = y1*4,x2*4,y2*4,x1*4</span>
+            <span class="s1">cv2.rectangle(img</span><span class="s0">, </span><span class="s1">(x1</span><span class="s0">,</span><span class="s1">y1)</span><span class="s0">, </span><span class="s1">(x2</span><span class="s0">,</span><span class="s1">y2)</span><span class="s0">, </span><span class="s1">(</span><span class="s4">0</span><span class="s0">,</span><span class="s4">255</span><span class="s0">,</span><span class="s4">0</span><span class="s1">)</span><span class="s0">, </span><span class="s4">2</span><span class="s1">)</span>
+            <span class="s1">cv2.rectangle(img</span><span class="s0">, </span><span class="s1">(x1</span><span class="s0">, </span><span class="s1">y2-</span><span class="s4">35</span><span class="s1">)</span><span class="s0">, </span><span class="s1">(x2</span><span class="s0">, </span><span class="s1">y2)</span><span class="s0">, </span><span class="s1">(</span><span class="s4">0</span><span class="s0">, </span><span class="s4">255</span><span class="s0">, </span><span class="s4">0</span><span class="s1">)</span><span class="s0">, </span><span class="s1">cv2.FILLED)</span>
+            <span class="s1">cv2.putText(img</span><span class="s0">, </span><span class="s1">name</span><span class="s0">, </span><span class="s1">(x1+</span><span class="s4">6</span><span class="s0">,</span><span class="s1">y2-</span><span class="s4">6</span><span class="s1">)</span><span class="s0">, </span><span class="s1">cv2.FONT_HERSHEY_COMPLEX</span><span class="s0">, </span><span class="s4">1</span><span class="s0">, </span><span class="s1">(</span><span class="s4">255</span><span class="s0">,</span><span class="s4">255</span><span class="s0">,</span><span class="s4">255</span><span class="s1">)</span><span class="s0">, </span><span class="s4">2</span><span class="s1">)</span>
+            <span class="s1">markattendence(name)</span>
+    <span class="s1">cv2.imshow(</span><span class="s2">&quot;webcam&quot;</span><span class="s0">, </span><span class="s1">img)</span>
+    <span class="s0">if </span><span class="s1">cv2.waitKey(</span><span class="s4">1</span><span class="s1">) &amp; </span><span class="s4">0xFF </span><span class="s1">== ord(</span><span class="s2">'q'</span><span class="s1">):</span>
+        <span class="s0">break</span>
+
+<span class="s1">cap.release()</span>
+<span class="s1">cv2.destroyAllWindows()</span>
+
+
+
+</pre>
+</body>
+</html>
